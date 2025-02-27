@@ -1,0 +1,10 @@
+@font-face {
+  font-family: testFont;
+  src: url('@/assets/font/testFont.ttf');
+  font-weight: 600;
+  font-style: normal;
+}
+body {
+  background-color: lightblue;
+  font-family: testFont;
+}
