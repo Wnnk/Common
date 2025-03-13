@@ -1,6 +1,9 @@
 <template>
   <div :class="`left-bar ${state.barShow && 'show-tools-bar'}`">
-    左侧
+    
+    <div v-for="route in routes" :key="route.name" class="left-bar-item" @click="changeView(route)">
+      {{ route.name }}
+    </div>
 
     <div
       :class="`close-btn left-btn ${state.barShow && 'left-btn-open'}`"
@@ -10,6 +13,17 @@
 
 <script setup>
 import { ref, reactive } from "vue";
+import { routes } from "@/router/routes";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+const changeView = (view) => {
+  router.push(view);
+};
+
+
+
 const state = reactive({
   barShow: true,
 });
@@ -17,13 +31,23 @@ const state = reactive({
 
 <style lang="scss" scoped>
 .left-bar {
-  width: 65px;
+  width: 100%;
   height: 100%;
-  background-color: #fff;
+  background-color: #f5f5f5;;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   position: relative;
-  &.show-tools-bar {
-    width: 380px;
+}
+
+.left-bar-item {
+  width: calc(100% - 20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 5px;
+  &:hover {
+    background-color: #f2f2f2;
   }
 }
 
@@ -37,7 +61,7 @@ const state = reactive({
   background-size: cover;
   background-position: 50%;
   position: absolute;
-  right: -20px;
+  right: 0px;
   z-index: 1;
   top: 50%;
   margin-top: -10px;

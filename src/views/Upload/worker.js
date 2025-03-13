@@ -1,14 +1,15 @@
 import SparkMD5 from "spark-md5";
 import axios from "axios";
 
+
 const url = "http://localhost:3000";
 
 const chunkSize = 1024 * 1024 * 200; // 200MB
 let pool = [];
-self.onmessage = (e) => {
+self.onmessage = async (e) => {
   const file = e.data.file;
-  const hash = calculateFileMd5(file);
-  pool = createFileChunks(file);
+  const hash = await calculateFileMd5(file);
+  pool = await createFileChunks(file);
   processPool(hash);
 };
 self.onmessageerror = (e) => {
@@ -20,32 +21,35 @@ self.onmessageerror = (e) => {
  * @param {String} hash 上传文件的MD5值
  **/
 const processPool = (hash) => {
-  while (pool.length > 0) {
-    const { chunk, file } = pool.shift();
-    uploadFileChunk(chunk, hash, chunk.index).then((res) => {
-      if (res.status === 200) {
-      }
-    });
-  }
-};
+  const totalChunks = pool.length;
 
-/**
- * @description: 上传文件
- * @param {File} chunk 文件片段
- * @param {String} hash 上传文件的MD5值
- * @param {Number} index 片段索引
- **/
-const uploadFileChunk = (chunk, hash, index) => {
-  const formData = new FormData();
-  formData.append("file", chunk);
-  formData.append("hash", hash);
-  formData.append("index", index);
-  return axios.post(`${url}/upload`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+  pool.map(({ chunk, index, chunkName, fileName }) => {
+    const formData = new FormData();
+    formData.append("chunk", chunk);
+    formData.append("hash", hash);
+    formData.append("index", index);
+    formData.append("chunkName", chunkName);
+    formData.append("fileName", fileName);
+    formData.append("totalChunks", totalChunks);
+    axios.post(`${url}/upload`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }).then((res) => {
+      if (res.data.code === 207) {
+        pool.splice(index, 1);
+      }
+      if (res.data.code === 200) {
+        pool = [];
+        self.postMessage({ code: 200, message: "上传成功" });
+      }
+    }).catch((err) => {
+      alert(err);
+    });
   });
 };
+
+
 
 /**
  * @description: 将文件切割成固定大小的块
@@ -62,7 +66,16 @@ const createFileChunks = (file) => {
     const chunk = file.slice(start, end);
     fileChunks.push(chunk);
   }
-  return fileChunks;
+  const chunkList = fileChunks.map((chunk, index) => {
+    return {
+      chunk,
+      size: chunk.size,
+      chunkName: `${file.name}_${index}`,
+      fileName: file.name,
+      index
+    }
+  });
+  return chunkList;
 };
 
 /**

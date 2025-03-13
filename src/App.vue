@@ -6,7 +6,12 @@
         <LeftBar />
       </el-aside>
       <el-main>
-        <router-view></router-view>
+        <router-view v-slot="{ Component,route }">
+          <keep-alive >
+            <component :is="Component" v-if="route.meta && route.meta.keepAlive"/>
+          </keep-alive>
+          <component v-if="!route.meta || !route.meta.keepAlive" :is="Component" />
+        </router-view>
       </el-main>
       <el-aside> </el-aside>
     </el-container>

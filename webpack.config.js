@@ -8,6 +8,8 @@ module.exports = {
   mode: "development",
   /* 入口文件 */
   entry: "./main.js",
+  /*  */
+  devtool: "eval-cheap-module-source-map",
   output: {
     /* 输出文件名 */
     filename: "bundle.js",
